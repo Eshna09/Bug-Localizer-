@@ -1,0 +1,5 @@
+workspaces/
+workspaces/*
+workspaces/**
+*.db
+buglocalizer.db
