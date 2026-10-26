@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+*.db
+*.db-shm
+*.db-wal
+
+# Workspaces (cloned repos - large, no need to commit)
+backend/workspaces/
+
+# Node
+node_modules/
+dist/
+frontend/dist/
+
+# Env files (keep .env.example, not .env)
+backend/.env
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kiro
+.kiro/
+
+# Test output
+.pytest_cache/

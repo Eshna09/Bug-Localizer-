@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-950 text-gray-100;
+    font-family: 'Inter', sans-serif;
+  }
+
+  code, pre {
+    font-family: 'JetBrains Mono', monospace;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-gray-900 border border-gray-800 rounded-xl p-5;
+  }
+
+  .card-header {
+    @apply flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-400 mb-4;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+
+  .badge-blue   { @apply bg-blue-900/50  text-blue-300  border border-blue-800; }
+  .badge-green  { @apply bg-green-900/50 text-green-300 border border-green-800; }
+  .badge-yellow { @apply bg-yellow-900/50 text-yellow-300 border border-yellow-800; }
+  .badge-red    { @apply bg-red-900/50   text-red-300   border border-red-800; }
+  .badge-gray   { @apply bg-gray-800     text-gray-400  border border-gray-700; }
+
+  .btn-primary {
+    @apply bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-800 hover:bg-gray-700 text-gray-200 font-medium px-4 py-2 rounded-lg transition-colors;
+  }
+
+  .evidence-high   { @apply text-green-400; }
+  .evidence-medium { @apply text-yellow-400; }
+  .evidence-low    { @apply text-orange-400; }
+  .evidence-insufficient { @apply text-gray-500; }
+}

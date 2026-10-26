@@ -1,0 +1,449 @@
+[
+  {
+    "bug_id": "B001",
+    "repo_url": "https://github.com/Eshna09/ShopBug",
+    "issue_description": "When I apply a 20% discount to a 1000 order, the final checkout amount is incorrect. The total shown is just the discount amount, not the discounted price.",
+    "ground_truth_file": "app/services/discount_service.py",
+    "ground_truth_function": "calculate_discount_amount",
+    "category": "calculation",
+    "difficulty": "easy",
+    "issue_quality": "specific"
+  },
+  {
+    "bug_id": "B002",
+    "repo_url": "https://github.com/Eshna09/ShopBug",
+    "issue_description": "The checkout total is wrong after applying a discount code. The discount is applied but the final price shown at checkout is incorrect.",
+    "ground_truth_file": "app/services/checkout_service.py",
+    "ground_truth_function": "checkout",
+    "category": "calculation",
+    "difficulty": "medium",
+    "issue_quality": "specific"
+  },
+  {
+    "bug_id": "B003",
+    "repo_url": "https://github.com/Eshna09/ShopBug",
+    "issue_description": "I cannot log in even with correct credentials. The login endpoint returns an error.",
+    "ground_truth_file": "app/services/auth_service.py",
+    "ground_truth_function": "login_user",
+    "category": "authentication",
+    "difficulty": "medium",
+    "issue_quality": "vague"
+  },
+  {
+    "bug_id": "B004",
+    "repo_url": "https://github.com/Eshna09/ShopBug",
+    "issue_description": "Adding items to cart fails. When I try to add a product, nothing happens or I get an error.",
+    "ground_truth_file": "app/services/cart_service.py",
+    "ground_truth_function": "add_to_cart",
+    "category": "cart",
+    "difficulty": "easy",
+    "issue_quality": "vague"
+  },
+  {
+    "bug_id": "B005",
+    "repo_url": "https://github.com/Eshna09/ShopBug",
+    "issue_description": "The cart subtotal is calculated incorrectly when multiple items are in the cart.",
+    "ground_truth_file": "app/services/cart_service.py",
+    "ground_truth_function": "get_cart_subtotal",
+    "category": "calculation",
+    "difficulty": "easy",
+    "issue_quality": "specific"
+  },
+
+  {
+    "bug_id": "B006",
+    "category": "database",
+    "layer": "backend",
+    "difficulty": "medium",
+    "issue_report_quality": "vague",
+    "issue_type": "user",
+    "issue_report": "The products page isn't showing any of the items I added. I added several products through the API but the list comes back empty.",
+    "expected_behavior": "GET /products/ returns all products that have available=True (products with stock > 0).",
+    "actual_behavior": "The query filters Product.available == False, returning only unavailable products and hiding all in-stock items.",
+    "root_cause_file": "app/services/product_service.py",
+    "root_cause_function": "get_all_products",
+    "root_cause_lines": [28],
+    "affected_files": [
+      "app/services/product_service.py"
+    ],
+    "root_cause_description": "The SQLAlchemy filter `Product.available == False` is inverted. It should be `Product.available == True`. The result is that only products explicitly marked unavailable are returned by the listing endpoint.",
+    "reproduction_steps": [
+      "Create a product with stock=5 (available=True).",
+      "Call GET /products/.",
+      "Observe the product does not appear in the response."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B006.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B007",
+    "category": "page_failure",
+    "layer": "frontend",
+    "difficulty": "easy",
+    "issue_report_quality": "moderate",
+    "issue_type": "user",
+    "issue_report": "The products page loads but never shows any products. The loading spinner disappears and then nothing appears — just an empty page.",
+    "expected_behavior": "After a successful API response, the Products page renders product cards.",
+    "actual_behavior": "loadProducts() discards the API response by calling setProducts([]) unconditionally, so the page always renders empty regardless of what the backend returns.",
+    "root_cause_file": "frontend/src/pages/Products.jsx",
+    "root_cause_function": "loadProducts",
+    "root_cause_lines": [23],
+    "affected_files": [
+      "frontend/src/pages/Products.jsx"
+    ],
+    "root_cause_description": "The line `setProducts(all || [])` was changed to `setProducts([])`. The API response is fetched successfully into the variable `all` but is never used — the state is immediately reset to an empty array.",
+    "reproduction_steps": [
+      "Ensure products exist in the database.",
+      "Navigate to the Products page.",
+      "Observe the page displays no products despite a successful GET /products/ response."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B007.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B008",
+    "category": "input_validation",
+    "layer": "backend",
+    "difficulty": "medium",
+    "issue_report_quality": "moderate",
+    "issue_type": "developer",
+    "issue_report": "I can add more items to my cart than the product has in stock. The API should reject quantities that exceed available stock.",
+    "expected_behavior": "add_to_cart rejects a quantity greater than product.stock with HTTP 400.",
+    "actual_behavior": "The stock-exceed check is absent from add_to_cart, so any quantity passes validation regardless of stock level.",
+    "root_cause_file": "app/services/cart_service.py",
+    "root_cause_function": "add_to_cart",
+    "root_cause_lines": [11, 12],
+    "affected_files": [
+      "app/services/cart_service.py"
+    ],
+    "root_cause_description": "The stock-overflow guard `if quantity > product.stock: raise HTTPException(400)` was removed from add_to_cart. update_cart_item still has the check, but the initial add does not.",
+    "reproduction_steps": [
+      "Create a product with stock=3.",
+      "Call POST /cart/add with quantity=10.",
+      "Observe HTTP 201 is returned instead of 400."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B008.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B009",
+    "category": "ui_rendering",
+    "layer": "frontend",
+    "difficulty": "medium",
+    "issue_report_quality": "vague",
+    "issue_type": "user",
+    "issue_report": "My orders page keeps crashing. I open it and the whole page goes blank with an error. It worked before but now it's broken.",
+    "expected_behavior": "The Orders page reads order history from localStorage and renders each order, or shows an empty-state message if there are no orders.",
+    "actual_behavior": "When localStorage has no stored orders, JSON.parse returns {} (a plain object) instead of []. Calling .map() on an object throws TypeError: orders.map is not a function, crashing the page.",
+    "root_cause_file": "frontend/src/pages/Orders.jsx",
+    "root_cause_function": "Orders",
+    "root_cause_lines": [12],
+    "affected_files": [
+      "frontend/src/pages/Orders.jsx"
+    ],
+    "root_cause_description": "The localStorage fallback is `'{}'` instead of `'[]'`. JSON.parse('{}') returns a plain object, not an array. When React renders the orders list it calls `orders.map(...)` which throws TypeError because objects do not have a .map method.",
+    "reproduction_steps": [
+      "Clear localStorage or open in a fresh browser session.",
+      "Navigate to the Orders page.",
+      "Observe the page crashes with a TypeError about .map."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B009.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B010",
+    "category": "backend_logic",
+    "layer": "backend",
+    "difficulty": "medium",
+    "issue_report_quality": "moderate",
+    "issue_type": "developer",
+    "issue_report": "The checkout endpoint returns 400 when the cart has items but succeeds silently when the cart is empty. The empty-cart guard appears to be backwards.",
+    "expected_behavior": "Checkout raises HTTP 400 when the cart is empty; it proceeds normally when items are present.",
+    "actual_behavior": "The guard `if items:` raises 400 on a non-empty cart and allows an empty cart through.",
+    "root_cause_file": "app/services/checkout_service.py",
+    "root_cause_function": "checkout",
+    "root_cause_lines": [13],
+    "affected_files": [
+      "app/services/checkout_service.py"
+    ],
+    "root_cause_description": "The empty-cart check reads `if items:` (truthy when items exist) and raises 400. It should be `if not items:`. The inversion means every valid checkout attempt is rejected.",
+    "reproduction_steps": [
+      "Add a product to a user's cart.",
+      "Call POST /checkout/?user_id=N.",
+      "Observe HTTP 400 is returned even though the cart has items."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B010.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B011",
+    "category": "navigation",
+    "layer": "frontend",
+    "difficulty": "easy",
+    "issue_report_quality": "specific",
+    "issue_type": "user",
+    "issue_report": "When I click on Cart in the navigation I see my order history instead of my cart. And when I click Orders I get the cart page. The two pages are completely swapped.",
+    "expected_behavior": "Navigating to /cart renders the Cart page; navigating to /orders renders the Orders page.",
+    "actual_behavior": "/cart renders the Orders component; /orders renders the Cart component. The routes are assigned to the wrong components.",
+    "root_cause_file": "frontend/src/App.jsx",
+    "root_cause_function": "App",
+    "root_cause_lines": [19, 20],
+    "affected_files": [
+      "frontend/src/App.jsx"
+    ],
+    "root_cause_description": "The two Route elements have their element props swapped: `<Route path=\"/cart\" element={<Orders />} />` and `<Route path=\"/orders\" element={<Cart />} />`. The correct assignment is Cart for /cart and Orders for /orders.",
+    "reproduction_steps": [
+      "Open the ShopBug frontend.",
+      "Click the Cart link in the navigation bar.",
+      "Observe that the Orders page is displayed instead of the Cart page."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B011.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B012",
+    "category": "dependency",
+    "layer": "backend",
+    "difficulty": "hard",
+    "issue_report_quality": "vague",
+    "issue_type": "user",
+    "issue_report": "Checkout crashes with a server error. Sometimes it seems to work but the order never shows my actual items.",
+    "expected_behavior": "checkout_service fetches cart items for the specific user and builds an order from those items.",
+    "actual_behavior": "cart_service.get_cart_items is called without user_id, causing a TypeError. Even if handled, the call would fetch items across all users rather than for the specific user.",
+    "root_cause_file": "app/services/checkout_service.py",
+    "root_cause_function": "checkout",
+    "root_cause_lines": [12],
+    "affected_files": [
+      "app/services/checkout_service.py",
+      "app/services/cart_service.py"
+    ],
+    "root_cause_description": "checkout calls `cart_service.get_cart_items(db)` without passing `user_id`. The function signature is `get_cart_items(db, user_id)` — user_id is required. This raises TypeError at runtime and prevents checkout from working.",
+    "reproduction_steps": [
+      "Add items to a user's cart.",
+      "Call POST /checkout/?user_id=N.",
+      "Observe HTTP 500 with a TypeError about missing positional argument."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B012.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "multi-file"
+  },
+  {
+    "bug_id": "B013",
+    "category": "state_management",
+    "layer": "frontend",
+    "difficulty": "hard",
+    "issue_report_quality": "moderate",
+    "issue_type": "user",
+    "issue_report": "Adding a product to my cart doesn't work. I click Add to Cart and it says Added to cart! but when I open my cart it's empty. Sometimes I get a product not found error.",
+    "expected_behavior": "Clicking Add to Cart calls cartApi.add(user.id, product.id, 1) creating a cart item for the current user and the selected product.",
+    "actual_behavior": "The arguments are swapped: cartApi.add(product.id, user.id, 1). The cart item is created with user_id=product.id and product_id=user.id — associating it with the wrong user and wrong product.",
+    "root_cause_file": "frontend/src/components/ProductCard.jsx",
+    "root_cause_function": "handleAdd",
+    "root_cause_lines": [22],
+    "affected_files": [
+      "frontend/src/components/ProductCard.jsx",
+      "frontend/src/services/api.js"
+    ],
+    "root_cause_description": "cartApi.add signature is add(userId, productId, quantity). The call passes product.id as the first argument and user.id as the second, reversing the intent. The resulting cart item belongs to a phantom user (the product's numeric ID) not the authenticated user.",
+    "reproduction_steps": [
+      "Log in and navigate to the Products page.",
+      "Click Add to Cart on any product.",
+      "Navigate to Cart — observe the cart is empty for your user.",
+      "Check the database — the cart item has user_id=product.id."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B013.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "multi-file"
+  },
+  {
+    "bug_id": "B014",
+    "category": "backend_logic",
+    "layer": "backend",
+    "difficulty": "hard",
+    "issue_report_quality": "vague",
+    "issue_type": "developer",
+    "issue_report": "The discount cap doesn't behave correctly. In some cases the discount amount returned is higher than the cap, in others a discount that should be below the cap gets capped anyway.",
+    "expected_behavior": "The computed discount amount (subtotal * percent / 100) is compared against max_discount_amount. If raw > cap, return cap; otherwise return raw.",
+    "actual_behavior": "The code compares subtotal against max_discount_amount. When subtotal > cap, it returns cap even if the computed discount is below cap; when subtotal <= cap, the cap is never applied.",
+    "root_cause_file": "app/services/discount_service.py",
+    "root_cause_function": "calculate_discount_amount",
+    "root_cause_lines": [27, 28],
+    "affected_files": [
+      "app/services/discount_service.py",
+      "app/services/checkout_service.py"
+    ],
+    "root_cause_description": "The cap check `if discount.max_discount_amount is not None and subtotal > discount.max_discount_amount` compares the subtotal (order total) against the cap instead of the computed percentage `raw`. This means for subtotal=30, percent=50%, cap=20: raw=15, but since 30>20 the function returns 20 (incorrect — raw is below cap).",
+    "reproduction_steps": [
+      "Create a discount with 50% and max_discount_amount=20.",
+      "Call calculate_discount_amount with subtotal=30.",
+      "Observe return is 20 instead of 15 (50% of 30)."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B014.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "multi-file"
+  },
+  {
+    "bug_id": "B015",
+    "category": "frontend_logic",
+    "layer": "frontend",
+    "difficulty": "medium",
+    "issue_report_quality": "moderate",
+    "issue_type": "user",
+    "issue_report": "I applied a discount code to my cart but the discount isn't reflected in my order. The total at checkout is the same as if I hadn't applied any discount.",
+    "expected_behavior": "When a discount is applied and the user clicks Checkout, the discount ID is sent to the backend so the order total reflects the discount.",
+    "actual_behavior": "The discountId ternary is inverted: when a discount is applied it sends null to the backend (no discount); when no discount is applied it sends a discount ID (unexpected discount).",
+    "root_cause_file": "frontend/src/pages/Cart.jsx",
+    "root_cause_function": "handleCheckout",
+    "root_cause_lines": [117, 118],
+    "affected_files": [
+      "frontend/src/pages/Cart.jsx",
+      "frontend/src/services/api.js"
+    ],
+    "root_cause_description": "The ternary `appliedDiscount ? null : KNOWN_DISCOUNTS.find(...)?.id` has its branches reversed. When appliedDiscount is truthy (a discount was applied), null is returned, dropping the discount from the checkout call. The correct form is `appliedDiscount ? KNOWN_DISCOUNTS.find(...)?.id : null`.",
+    "reproduction_steps": [
+      "Add items to cart and enter discount code SAVE10.",
+      "Click Checkout.",
+      "Observe the order total does not include the discount — the API receives discount_id=null."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B015.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "multi-file"
+  },
+  {
+    "bug_id": "B016",
+    "category": "authentication",
+    "layer": "backend",
+    "difficulty": "easy",
+    "issue_report_quality": "specific",
+    "issue_type": "developer",
+    "issue_report": "POST /auth/register allows two accounts to be created with the same email address. The second registration should return HTTP 400.",
+    "expected_behavior": "Attempting to register with an email that already exists returns HTTP 400 with a clear error message.",
+    "actual_behavior": "register_user queries for an existing user but never raises an exception when one is found. The duplicate insert proceeds, either creating a second user or triggering a database integrity error.",
+    "root_cause_file": "app/services/auth_service.py",
+    "root_cause_function": "register_user",
+    "root_cause_lines": [10, 11],
+    "affected_files": [
+      "app/services/auth_service.py"
+    ],
+    "root_cause_description": "The function fetches `existing = db.query(User).filter(...)` but does not check `if existing: raise HTTPException(400)`. The duplicate-email guard is queried but the result is silently ignored.",
+    "reproduction_steps": [
+      "Call POST /auth/register with email=test@test.com.",
+      "Call POST /auth/register again with the same email.",
+      "Observe HTTP 201 or 500 instead of HTTP 400."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B016.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B017",
+    "category": "calculation",
+    "layer": "backend",
+    "difficulty": "hard",
+    "issue_report_quality": "vague",
+    "issue_type": "user",
+    "issue_report": "Something is wrong with the cart totals on checkout. The amount charged doesn't make sense — it's much lower than what the products cost.",
+    "expected_behavior": "get_cart_subtotal returns sum(item.product.price * item.quantity) for all cart items.",
+    "actual_behavior": "get_cart_subtotal uses item.product.stock instead of item.product.price, computing stock_count*quantity instead of price*quantity.",
+    "root_cause_file": "app/services/cart_service.py",
+    "root_cause_function": "get_cart_subtotal",
+    "root_cause_lines": [59],
+    "affected_files": [
+      "app/services/cart_service.py",
+      "app/services/checkout_service.py"
+    ],
+    "root_cause_description": "The sum expression `item.product.stock * item.quantity` uses the stock count (an integer representing inventory) as if it were the price. For a $100 product with stock=5 and quantity=2, this returns 5*2=10 instead of 100*2=200.",
+    "reproduction_steps": [
+      "Create a product with price=100.00, stock=5.",
+      "Add 2 units to cart.",
+      "Retrieve the subtotal — observe 10 instead of 200."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B017.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "multi-file"
+  },
+  {
+    "bug_id": "B018",
+    "category": "database",
+    "layer": "backend",
+    "difficulty": "hard",
+    "issue_report_quality": "vague",
+    "issue_type": "user",
+    "issue_report": "Sometimes items disappear from other users' carts on their own. One user reported their cart was cleared even though they hadn't removed anything.",
+    "expected_behavior": "remove_from_cart deletes only the cart item belonging to the specified user_id and product_id combination.",
+    "actual_behavior": "The query filters only by product_id, ignoring user_id. The first matching cart item for that product across any user is deleted, which may belong to a different user.",
+    "root_cause_file": "app/services/cart_service.py",
+    "root_cause_function": "remove_from_cart",
+    "root_cause_lines": [30, 31],
+    "affected_files": [
+      "app/services/cart_service.py"
+    ],
+    "root_cause_description": "The filter `CartItem.product_id == product_id` is missing `CartItem.user_id == user_id`. When two users have the same product in their carts, removing it for one user may accidentally remove the other user's item instead.",
+    "reproduction_steps": [
+      "Add product P to both user A's and user B's carts.",
+      "Call DELETE /cart/remove/{P}?user_id={B_id}.",
+      "Retrieve user A's cart — observe the item is gone from user A's cart."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B018.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B019",
+    "category": "authentication",
+    "layer": "backend",
+    "difficulty": "easy",
+    "issue_report_quality": "specific",
+    "issue_type": "user",
+    "issue_report": "I can't log in even though I'm using the correct password. I registered successfully but every login attempt fails with an authentication error.",
+    "expected_behavior": "login_user raises HTTP 401 only when the password does NOT match the stored hash.",
+    "actual_behavior": "The verification condition is inverted: HTTP 401 is raised when the password DOES match, and login succeeds when it does NOT match.",
+    "root_cause_file": "app/services/auth_service.py",
+    "root_cause_function": "login_user",
+    "root_cause_lines": [23],
+    "affected_files": [
+      "app/services/auth_service.py"
+    ],
+    "root_cause_description": "The condition `if pwd_context.verify(password, user.hashed_password):` raises 401 when verification succeeds (correct password). The negation `if not pwd_context.verify(...)` is required. Combined with B020 (plaintext storage), bcrypt.verify always fails on plaintext hashes, meaning all logins raise 500.",
+    "reproduction_steps": [
+      "Register with password 'correctpass'.",
+      "Attempt login with 'wrongpass' — observe it would succeed (if hashing worked).",
+      "Attempt login with 'correctpass' — observe HTTP 401."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B019.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  },
+  {
+    "bug_id": "B020",
+    "category": "authentication",
+    "layer": "backend",
+    "difficulty": "easy",
+    "issue_report_quality": "moderate",
+    "issue_type": "user",
+    "issue_report": "I just registered an account and immediately tried to log in with the same password but it said my credentials were incorrect.",
+    "expected_behavior": "Passwords are hashed with bcrypt on registration so that pwd_context.verify() succeeds on login with the same password.",
+    "actual_behavior": "The password is stored as plaintext (hashed = password). bcrypt.verify(plaintext, plaintext) fails because plaintext is not a valid bcrypt hash format.",
+    "root_cause_file": "app/services/auth_service.py",
+    "root_cause_function": "register_user",
+    "root_cause_lines": [11],
+    "affected_files": [
+      "app/services/auth_service.py"
+    ],
+    "root_cause_description": "register_user assigns `hashed = password` instead of `hashed = pwd_context.hash(password)`. The CryptContext is imported but never used for hashing. The plaintext is stored as hashed_password, so subsequent bcrypt verification always fails.",
+    "reproduction_steps": [
+      "Register a user with any password.",
+      "Query the database — observe hashed_password equals the raw password string.",
+      "Attempt login with the same password — observe failure due to invalid hash."
+    ],
+    "reproduction_test": "tests/reproduction_tests/test_B020.py",
+    "commit_hash": "7515d4669a57997bf13caa7b880c494d5d1910f5",
+    "scope": "single-file"
+  }
+]
